@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ movie.title }} - Kinoman{% endblock %}
+
+{% block content %}
+    <div class="movie-detail animate__animated animate__fadeIn">
+        <div class="row">
+            <!-- Movie Poster -->
+            <div class="col-md-4">
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="img-fluid rounded shadow">
+            </div>
+
+            <!-- Movie Info -->
+            <div class="col-md-8">
+                <h1 class="mb-4">{{ movie.title }}</h1>
+                <p class="lead">{{ movie.description }}</p>
+                <div class="movie-meta">
+                    <p><strong>Дата выхода:</strong> {{ movie.release_date }}</p>
+                    {% if user.is_authenticated %}
+                        <div class="rating-form mb-4">
+                            <h4>Оценить фильм</h4>
+                            <form method="post" action="{% url 'rate_movie' movie.id %}">
+                                {% csrf_token %}
+                                <div class="rating-stars">
+                                    {% for i in "12345" %}
+                                        <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}"
+                                            {% if user_rating == i %}checked{% endif %}>
+                                        <label for="star{{ i }}">★</label>
+                                    {% endfor %}
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-2">Оценить</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section mt-5">
+            <form id="comment-form" method="post" class="mb-4">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="comment" id="comment-text" class="form-control" rows="3" 
+                              required placeholder="Оставьте свой комментарий..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Отправить</button>
+            </form>
+        
+            <!-- Список комментариев -->
+            <div id="comments-list">
+                {% for comment in movie.comment_set.all %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <strong>{{ comment.user.username }}</strong>
+                            <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <div class="comment-body mt-2">
+                            {{ comment.text }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Пока нет комментариев. Будьте первым!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Ваши существующие стили */
+        .rating-stars {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        .rating-stars input {
+            display: none;
+        }
+        .rating-stars label {
+            font-size: 30px;
+            color: #ddd;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label,
+        .rating-stars input:checked ~ label {
+            color: #ffd700;
+        }
+        .comment {
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+        }
+        .comment:last-child {
+            border-bottom: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentForm = document.getElementById('comment-form');
+            if (!commentForm) return; // Если формы нет (для незарегистрированных пользователей), прекращаем выполнение
+            
+            const commentsList = document.getElementById('comments-list');
+            const commentText = document.getElementById('comment-text');
+            const movieId = {{ movie.id }};
+            let lastUpdateTime = new Date().toISOString(); // Для отслеживания времени последнего обновления
+            
+            // Обработчик отправки формы
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Проверка на пустой комментарий
+                if (!commentText.value.trim()) {
+                    alert('Комментарий не может быть пустым');
+                    return;
+                }
+                
+                // Показываем индикатор загрузки
+                const submitBtn = commentForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+                
+                // Отправка данных через Fetch API
+                fetch(`/add-comment/${movieId}/`, {
+                    method: 'POST',
+                    body: new FormData(commentForm),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Ошибка сети');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Создаем HTML нового комментария
+                        const newComment = document.createElement('div');
+                        newComment.className = 'comment';
+                        newComment.innerHTML = `
+                            <div class="comment-header">
+                                <strong>${data.comment.user}</strong>
+                                <small class="text-muted">${data.comment.created_at}</small>
+                            </div>
+                            <div class="comment-body mt-2">
+                                ${data.comment.text}
+                            </div>
+                        `;
+                        
+                        // Удаляем сообщение "Нет комментариев", если оно есть
+                        const emptyMsg = commentsList.querySelector('.text-muted');
+                        if (emptyMsg) emptyMsg.remove();
+                        
+                        // Добавляем новый комментарий в начало списка
+                        commentsList.insertBefore(newComment, commentsList.firstChild);
+                        
+                        // Очищаем поле ввода
+                        commentText.value = '';
+                        
+                        // Обновляем время последнего изменения
+                        lastUpdateTime = new Date().toISOString();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка при отправке комментария: ' + error.message);
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Отправить';
+                });
+            });
+            
+            // Функция для обновления списка комментариев (только новых)
+            function refreshComments() {
+                fetch(`/comments/${movieId}/?since=${encodeURIComponent(lastUpdateTime)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Ошибка загрузки комментариев');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.comments && data.comments.length > 0) {
+                            // Обновляем время последнего изменения
+                            lastUpdateTime = data.last_update;
+                            
+                            // Добавляем новые комментарии
+                            data.comments.forEach(comment => {
+                                const newComment = document.createElement('div');
+                                newComment.className = 'comment';
+                                newComment.innerHTML = `
+                                    <div class="comment-header">
+                                        <strong>${comment.user}</strong>
+                                        <small class="text-muted">${comment.created_at}</small>
+                                    </div>
+                                    <div class="comment-body mt-2">
+                                        ${comment.text}
+                                    </div>
+                                `;
+                                commentsList.insertBefore(newComment, commentsList.firstChild);
+                            });
+                            
+                            // Удаляем сообщение "Нет комментариев", если оно есть
+                            const emptyMsg = commentsList.querySelector('.text-muted');
+                            if (emptyMsg) emptyMsg.remove();
+                        }
+                    })
+                    .catch(error => console.error('Error fetching comments:', error));
+            }
+            
+            // Обновляем комментарии каждые 30 секунд (вместо 1 секунды)
+            setInterval(refreshComments, 1000);
+        });
+    </script>
+{% endblock %}

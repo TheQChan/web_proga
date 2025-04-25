@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Kinoman{% endblock %}
+
+{% block content %}
+    <section class="hero-section animate__animated animate__fadeIn">
+        {% if featured_movie %}
+            {% if featured_movie.hero_image %}
+                <img src="{{ featured_movie.hero_image.url }}" alt="{{ featured_movie.title }}" class="hero-image">
+            {% else %}
+                <img src="{{ featured_movie.poster.url }}" alt="{{ featured_movie.title }}" class="hero-image">
+            {% endif %}
+            <div class="hero-content">
+                <h1 class="display-4">{{ featured_movie.title }}</h1>
+                <p class="lead">{{ featured_movie.description|truncatewords:30 }}</p>
+                <a href="{% url 'movie_detail' featured_movie.id %}" class="btn btn-primary btn-lg">Подробнее</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="popular-movies">
+        <h2 class="text-center mb-4 animate__animated animate__fadeIn">Популярные фильмы</h2>
+        <div class="movies-slider row flex-nowrap">
+            {% for movie in popular_movies %}
+                <div class="col-md-3">
+                    <div class="movie-card animate__animated animate__fadeIn">
+                        <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+                        <div class="card-body">
+                            <h5 class="movie-title">{{ movie.title }}</h5>
+                            <p class="card-text">{{ movie.description|truncatewords:20 }}</p>
+                            <a href="{% url 'movie_detail' movie.id %}" class="btn btn-primary">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    <style>
+        .movie-card {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 101%;
+            background-color: white;
+            text-align: center;
+        }
+        .card-text {
+            color: black;
+        }
+        .movie-card:hover {
+            transform: translateY(-5px);
+        }
+        .movie-poster {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+        .movie-title {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+        .movie-btn {
+            color: white !important;
+            transition: all 0.3s ease;
+        }
+        .movie-btn:hover {
+            color: black !important;
+            background-color: white !important;
+            border-color: var(--primary-color) !important;
+        }
+    </style>
+{% endblock %} 

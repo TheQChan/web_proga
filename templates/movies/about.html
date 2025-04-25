@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}О нас - Kinoman{% endblock %}
+
+{% block content %}
+    <div class="about-section animate__animated animate__fadeIn">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-4">О проекте Kinoman</h1>
+                <p class="lead">
+                    Kinoman - это современная платформа для любителей кино, где каждый может найти фильм по душе,
+                    поделиться своими впечатлениями и открыть для себя новые шедевры кинематографа.
+                </p>
+                <p>
+                    Наша миссия - создать уютное пространство для всех киноманов, где можно:
+                </p>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Узнавать о новинках кино
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Обсуждать любимые фильмы
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Делиться впечатлениями
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Находить единомышленников
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <img src="/static/img/about-image.png" alt="О нас" class="img-fluid animate__animated animate__fadeInRight">
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 animate__animated animate__fadeIn">
+                    <i class="fas fa-film fa-3x mb-3 text-primary"></i>
+                    <h3>Большая коллекция</h3>
+                    <p>Тысячи фильмов разных жанров и годов</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 animate__animated animate__fadeIn">
+                    <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+                    <h3>Сообщество</h3>
+                    <p>Активное обсуждение и обмен мнениями</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 animate__animated animate__fadeIn">
+                    <i class="fas fa-star fa-3x mb-3 text-primary"></i>
+                    <h3>Рейтинги</h3>
+                    <p>Честные оценки от реальных зрителей</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .about-section {
+            padding: 4rem 0;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.23);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+        .fas {
+            color: var(--secondary-color);
+        }
+    </style>
+{% endblock %} 
+
+

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль - {{ user.username }} - Kinoman{% endblock %}
+
+{% block content %}
+    <div class="profile-section animate__animated animate__fadeIn">
+        <div class="row">
+            <!-- Profile Info -->
+            <div class="col-md-3 text-center">
+                {% if user_profile.avatar %}
+                    <img src="{{ user_profile.avatar.url }}" alt="{{ user.username }}" class="profile-avatar mb-3">
+                {% else %}
+                    <img src="/static/img/default-avatar.png" alt="{{ user.username }}" class="profile-avatar mb-3">
+                {% endif %}
+                <h2 class="mb-3">{{ user.username }}</h2>
+                {% if user_profile.bio %}
+                    <p class="bio mb-4">{{ user_profile.bio }}</p>
+                {% endif %}
+                {% if user == request.user %}
+                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        Редактировать профиль
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Rated Movies -->
+            <div class="col-md-9">
+                <h3 class="mb-4">Оцененные фильмы</h3>
+                <div class="row">
+                    {% for rating in user_ratings %}
+                        <div class="col-md-4 mb-4">
+                            <div class="movie-card animate__animated animate__fadeIn">
+                                <img src="{{ rating.movie.poster.url }}" alt="{{ rating.movie.title }}" class="movie-poster">
+                                <div class="card-body">
+                                    <h5 class="movie-title">{{ rating.movie.title }}</h5>
+                                    <div class="rating mb-2">
+                                        {% for i in "12345" %}
+                                            <span class="star {% if i|add:'0' <= rating.rating %}filled{% endif %}">★</span>
+                                        {% endfor %}
+                                    </div>
+                                    <a href="{% url 'movie_detail' rating.movie.id %}" class="btn btn-primary">Подробнее</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted">Пока нет оцененных фильмов.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    {% if user == request.user %}
+        <div class="modal fade" id="editProfileModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактировать профиль</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="avatar" class="form-label">Аватар</label>
+                                <input type="file" class="form-control" id="avatar" name="avatar">
+                            </div>
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">О себе</label>
+                                <textarea class="form-control" id="bio" name="bio" rows="3">{{ user_profile.bio }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <style>
+        .profile-avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .bio {
+            font-style: italic;
+            color: #666;
+        }
+        .star {
+            color: #ddd;
+            font-size: 20px;
+        }
+        .star.filled {
+            color: #ffd700;
+        }
+        .movie-card {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 102%;
+            background-color: white;
+            text-align: center;
+        }
+        .movie-card:hover {
+            transform: translateY(-5px);
+        }
+        .movie-poster {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+        .movie-title {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+        .movie-btn {
+            color: white !important;
+            transition: all 0.3s ease;
+        }
+        .movie-btn:hover {
+            color: black !important;
+            background-color: white !important;
+            border-color: var(--primary-color) !important;
+        }
+    </style>
+{% endblock %} 

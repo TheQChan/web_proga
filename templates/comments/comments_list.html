@@ -1,0 +1,5 @@
+{% for comment in comments %}
+    {% include 'comments/comment_item.html' %}
+{% empty %}
+    <p class="text-muted">Пока нет комментариев. Будьте первым!</p>
+{% endfor %}
