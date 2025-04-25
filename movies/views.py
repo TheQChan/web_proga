@@ -104,6 +104,7 @@ def add_comment(request, movie_id):
             {
                 "success": True,
                 "comment": {
+                    "id": comment.id,  # Добавляем ID комментария
                     "user": request.user.username,
                     "text": comment.text,
                     "created_at": comment.created_at.strftime("%d.%m.%Y %H:%M"),
@@ -118,26 +119,31 @@ def get_comments(request, movie_id):
     since = request.GET.get("since")
     movie = get_object_or_404(Movie, id=movie_id)
 
-    comments_query = movie.comment_set.all().order_by("-created_at")
+    # Базовый запрос - последние комментарии сначала
+    comments_qs = Comment.objects.filter(movie=movie).order_by("-created_at")
 
     if since:
         try:
-            since_date = timezone.datetime.fromisoformat(since)
-            comments_query = comments_query.filter(created_at__gt=since_date)
+            since_dt = timezone.datetime.fromisoformat(since)
+            comments_qs = comments_qs.filter(created_at__gt=since_dt)
         except (ValueError, TypeError):
             pass
 
-    comments = list(comments_query.values("user__username", "text", "created_at")[:50])
-
-    # Форматируем дату для каждого комментария
-    for comment in comments:
-        comment["created_at"] = timezone.datetime.strftime(
-            comment["created_at"], "%d.%m.%Y %H:%M"
-        )
-        comment["user"] = comment["user__username"]
+    comments = [
+        {
+            "id": c.id,
+            "user": c.user.username,
+            "text": c.text,
+            "created_at": c.created_at.strftime("%d.%m.%Y %H:%M"),
+        }
+        for c in comments_qs
+    ]
 
     return JsonResponse(
-        {"comments": comments, "last_update": timezone.now().isoformat()}
+        {
+            "comments": comments,
+            "last_update": timezone.now().isoformat(),
+        }
     )
 
 
